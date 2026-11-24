@@ -131,9 +131,9 @@ export async function PATCH(request) {
       );
     }
 
-    // Persetujuan Teacher Applicant.
+    // Menyetujui permohonan Teacher.
     if (body.action === "approve") {
-      const result = await query(
+      const approved = await query(
         `UPDATE users
          SET role = 'teacher',
              teacher_status = 'approved',
@@ -143,20 +143,19 @@ export async function PATCH(request) {
         [id]
       );
 
-      if (result.rowCount === 0) {
+      if (approved.rowCount === 0) {
         return NextResponse.json(
-          { message: "Pengguna tidak ditemukan atau bukan pendaftar Pending." },
+          { message: "Permohonan tidak ditemukan atau sudah diproses." },
           { status: 404 }
         );
       }
 
       return NextResponse.json({
-        message: "Permohonan Teacher berhasil disetujui.",
-        user: result.rows[0],
+        message: "Teacher berhasil disetujui.",
+        user: approved.rows[0],
       });
     }
 
-    // Mengubah informasi pengguna.
     const username = body.username?.trim();
     const email = body.email?.trim().toLowerCase();
     const role = body.role;
@@ -171,7 +170,7 @@ export async function PATCH(request) {
 
     if (username.length < 3 || username.length > 100) {
       return NextResponse.json(
-        { message: "Username harus 3–100 karakter." },
+        { message: "Username harus terdiri dari 3–100 karakter." },
         { status: 400 }
       );
     }
@@ -185,14 +184,14 @@ export async function PATCH(request) {
 
     if (id === admin.id && role !== "admin") {
       return NextResponse.json(
-        { message: "Anda tidak dapat mengubah role akun Admin sendiri." },
+        { message: "Anda tidak dapat menurunkan role akun sendiri." },
         { status: 400 }
       );
     }
 
     let result;
 
-    if (password) {
+    if (password && password.trim() !== "") {
       if (password.length < 8 || password.length > 72) {
         return NextResponse.json(
           { message: "Password harus 8–72 karakter." },
@@ -204,7 +203,10 @@ export async function PATCH(request) {
 
       result = await query(
         `UPDATE users
-         SET username = $1, email = $2, role = $3, password_hash = $4,
+         SET username = $1,
+             email = $2,
+             role = $3,
+             password_hash = $4,
              teacher_status = CASE
                WHEN $3 = 'teacher' THEN 'approved'
                ELSE NULL
@@ -220,7 +222,9 @@ export async function PATCH(request) {
     } else {
       result = await query(
         `UPDATE users
-         SET username = $1, email = $2, role = $3,
+         SET username = $1,
+             email = $2,
+             role = $3,
              teacher_status = CASE
                WHEN $3 = 'teacher' THEN 'approved'
                ELSE NULL
@@ -249,14 +253,15 @@ export async function PATCH(request) {
   } catch (error) {
     if (error.code === "23505") {
       return NextResponse.json(
-        { message: "Email sudah digunakan oleh pengguna lain." },
+        { message: "Email sudah digunakan." },
         { status: 409 }
       );
     }
 
-    console.error(error);
+    console.error("UPDATE USER ERROR:", error);
+
     return NextResponse.json(
-      { message: "Gagal memperbarui pengguna." },
+      { message: "Terjadi kesalahan saat memperbarui pengguna." },
       { status: 500 }
     );
   }

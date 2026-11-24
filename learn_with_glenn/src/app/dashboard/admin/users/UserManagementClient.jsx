@@ -76,30 +76,47 @@ export default function UserManagementPage() {
     setMessage("");
 
     try {
-      const response = await fetch("/api/admin/users", {
+        const payload = {
+        username: form.username.trim(),
+        email: form.email.trim(),
+        role: form.role,
+        };
+
+        if (form.password.trim() !== "") {
+        payload.password = form.password;
+        }
+
+        const response = await fetch("/api/admin/users", {
         method: editingId ? "PATCH" : "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+            "Content-Type": "application/json",
+        },
         body: JSON.stringify(
-          editingId ? { ...form, id: editingId } : form
+            editingId ? { ...payload, id: editingId } : {
+            ...payload,
+            password: form.password,
+            }
         ),
-      });
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (!response.ok) {
-        setMessage(data.message);
+        if (!response.ok) {
+        setMessage(data.message || "Gagal menyimpan pengguna.");
         return;
-      }
+        }
 
-      setMessage(data.message);
-      setShowForm(false);
-      setForm(initialForm);
-      setEditingId(null);
-      await loadUsers();
-    } catch {
-      setMessage("Tidak dapat terhubung ke server.");
+        setMessage(data.message);
+        setShowForm(false);
+        setForm(initialForm);
+        setEditingId(null);
+
+        await loadUsers();
+    } catch (error) {
+        console.error(error);
+        setMessage("Tidak dapat terhubung ke server.");
     } finally {
-      setSaving(false);
+        setSaving(false);
     }
   }
 
