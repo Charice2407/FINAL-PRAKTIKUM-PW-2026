@@ -138,6 +138,7 @@ export async function PATCH(request) {
   }
 }
 
+
 export async function DELETE(request) {
   try {
     const admin = await requireUserRole(["admin"]);
@@ -179,13 +180,14 @@ export async function DELETE(request) {
       return NextResponse.json(
         {
           message:
-            "Kategori tidak dapat dihapus karena masih digunakan oleh course.",
+            "Kategori tidak dapat dihapus karena masih digunakan oleh course. Ubah kategori course terlebih dahulu.",
         },
         { status: 409 }
       );
     }
 
-    console.error(error);
+    console.error("DELETE CATEGORY ERROR:", error);
+
     return NextResponse.json(
       { message: "Gagal menghapus kategori." },
       { status: 500 }

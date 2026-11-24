@@ -208,11 +208,11 @@ export async function PATCH(request) {
              role = $3,
              password_hash = $4,
              teacher_status = CASE
-               WHEN $3 = 'teacher' THEN 'approved'
+               WHEN $3::varchar = 'teacher' THEN 'approved'
                ELSE NULL
              END,
              approved_at = CASE
-               WHEN $3 = 'teacher' THEN COALESCE(approved_at, CURRENT_TIMESTAMP)
+               WHEN $3::varchar = 'teacher' THEN COALESCE(approved_at, CURRENT_TIMESTAMP)
                ELSE NULL
              END
          WHERE id = $5
@@ -226,11 +226,11 @@ export async function PATCH(request) {
              email = $2,
              role = $3,
              teacher_status = CASE
-               WHEN $3 = 'teacher' THEN 'approved'
+               WHEN $3::varchar = 'teacher' THEN 'approved'
                ELSE NULL
              END,
              approved_at = CASE
-               WHEN $3 = 'teacher' THEN COALESCE(approved_at, CURRENT_TIMESTAMP)
+               WHEN $3::varchar = 'teacher' THEN COALESCE(approved_at, CURRENT_TIMESTAMP)
                ELSE NULL
              END
          WHERE id = $4
