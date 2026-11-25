@@ -1,4 +1,3 @@
-
 import { Pool } from "pg";
 
 // Koneksi database bersama agar aplikasi tidak membuat pool baru
