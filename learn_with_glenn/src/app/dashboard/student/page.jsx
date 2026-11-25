@@ -20,7 +20,7 @@ export default async function StudentDashboard() {
       FROM enrollments e JOIN courses c ON c.id=e.course_id JOIN users u ON u.id=c.teacher_id
       LEFT JOIN contents ct ON ct.course_id=c.id
       LEFT JOIN lesson_progress lp ON lp.content_id=ct.id AND lp.enrollment_id=e.id
-      WHERE e.student_id=$1 GROUP BY c.id,u.username ORDER BY e.enrolled_at DESC LIMIT 4`, [user.id]),
+      WHERE e.student_id=$1 GROUP BY c.id,u.username,e.enrolled_at ORDER BY e.enrolled_at DESC LIMIT 4`, [user.id]),
   ]);
   const total = summary.rows[0].total;
   const completed = summary.rows[0].completed_lessons;
