@@ -1,0 +1,7 @@
+import Link from "next/link";
+import {redirect} from "next/navigation";
+import {query} from "@/lib/db";
+import {requireUserRole} from "@/lib/server-auth";
+import LogoutButton from "@/components/LogoutButton";
+import CourseManagementClient from "@/components/CourseManagementClient";
+export default async function TeacherCoursesPage(){const user=await requireUserRole(["teacher"]);if(!user)redirect("/login");const [cs,cats]=await Promise.all([query(`SELECT c.*,cat.name AS category_name,u.username AS teacher_name,COUNT(DISTINCT e.id)::int AS enrollment_count FROM courses c JOIN categories cat ON cat.id=c.category_id JOIN users u ON u.id=c.teacher_id LEFT JOIN enrollments e ON e.course_id=c.id WHERE c.teacher_id=$1 GROUP BY c.id,cat.name,u.username ORDER BY c.created_at DESC`,[user.id]),query("SELECT id,name FROM categories ORDER BY name")]);return <main className="min-h-screen bg-slate-50"><header className="border-b bg-white px-6 py-5"><div className="mx-auto flex max-w-7xl justify-between"><Link href="/dashboard/teacher" className="font-bold text-cyan-700">← Teacher Dashboard</Link><LogoutButton/></div></header><section className="mx-auto max-w-7xl px-6 py-10"><h1 className="text-3xl font-black">Course Management</h1><p className="mb-8 mt-2 text-slate-500">Kelola course milik Anda dan materi pembelajarannya.</p><CourseManagementClient initialCourses={cs.rows} categories={cats.rows} role="teacher" teacherId={user.id}/></section></main>}

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -19,6 +18,8 @@ export default function UserManagementPage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const [pendingApproval, setPendingApproval] = useState(null);
 
   async function loadUsers() {
     setLoading(true);
@@ -120,41 +121,47 @@ export default function UserManagementPage() {
     }
   }
 
-  async function approveTeacher(id) {
-    if (!confirm("Setujui pengguna ini sebagai Teacher?")) return;
+  function approveTeacher(id) {
+    setPendingApproval(users.find((user) => user.id === id) || null);
+  }
 
+  async function confirmApproveTeacher() {
+    if (!pendingApproval) return;
     try {
       const response = await fetch("/api/admin/users", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, action: "approve" }),
+        body: JSON.stringify({ id: pendingApproval.id, action: "approve" }),
       });
-
       const data = await response.json();
       setMessage(data.message);
-
       if (response.ok) await loadUsers();
     } catch {
       setMessage("Gagal menyetujui Teacher.");
+    } finally {
+      setPendingApproval(null);
     }
   }
 
-  async function deleteUser(user) {
-    if (!confirm(`Hapus akun ${user.username}?`)) return;
+  function deleteUser(user) {
+    setPendingDelete(user);
+  }
 
+  async function confirmDeleteUser() {
+    if (!pendingDelete) return;
     try {
       const response = await fetch("/api/admin/users", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: user.id }),
+        body: JSON.stringify({ id: pendingDelete.id }),
       });
-
       const data = await response.json();
       setMessage(data.message);
-
       if (response.ok) await loadUsers();
     } catch {
       setMessage("Gagal menghapus pengguna.");
+    } finally {
+      setPendingDelete(null);
     }
   }
 
@@ -399,6 +406,32 @@ export default function UserManagementPage() {
           )}
         </div>
       </section>
+      {pendingApproval && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4">
+          <div role="dialog" aria-modal="true" aria-labelledby="approve-teacher-title" className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-xl font-black text-emerald-700">✓</span>
+            <h2 id="approve-teacher-title" className="mt-4 text-lg font-black text-slate-950">Setujui Teacher?</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-500">Akun <b className="text-slate-800">{pendingApproval.username}</b> akan mendapatkan role Teacher dan dapat mulai mengelola course.</p>
+            <div className="mt-6 flex justify-end gap-2">
+              <button type="button" onClick={() => setPendingApproval(null)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-600">Batal</button>
+              <button type="button" onClick={confirmApproveTeacher} className="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-700">Setujui Teacher</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {pendingDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4">
+          <div role="dialog" aria-modal="true" aria-labelledby="delete-user-title" className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-rose-50 text-xl font-black text-rose-700">!</span>
+            <h2 id="delete-user-title" className="mt-4 text-lg font-black text-slate-950">Hapus pengguna?</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-500">Akun <b className="text-slate-800">{pendingDelete.username}</b> akan dihapus. Tindakan ini tidak dapat dibatalkan.</p>
+            <div className="mt-6 flex justify-end gap-2">
+              <button type="button" onClick={() => setPendingDelete(null)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-600">Batal</button>
+              <button type="button" onClick={confirmDeleteUser} className="rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-rose-700">Ya, hapus akun</button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

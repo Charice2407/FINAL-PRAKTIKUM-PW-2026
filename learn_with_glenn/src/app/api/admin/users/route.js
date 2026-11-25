@@ -82,8 +82,12 @@ export async function POST(request) {
     const result = await query(
       `INSERT INTO users
        (username, email, password_hash, role, teacher_status, approved_at)
-       VALUES ($1, $2, $3, $4, NULL, NULL)
-       RETURNING id, username, email, role, teacher_status, created_at`,
+       VALUES (
+         $1, $2, $3, $4,
+         CASE WHEN $4 = 'teacher' THEN 'approved' ELSE NULL END,
+         CASE WHEN $4 = 'teacher' THEN CURRENT_TIMESTAMP ELSE NULL END
+       )
+       RETURNING id, username, email, role, teacher_status, approved_at, created_at`,
       [username, email, passwordHash, role]
     );
 
