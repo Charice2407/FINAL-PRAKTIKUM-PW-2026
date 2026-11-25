@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -17,6 +16,7 @@ export default function CategoryManagementPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [pendingDelete, setPendingDelete] = useState(null);
 
   async function loadCategories() {
     setLoading(true);
@@ -89,22 +89,25 @@ export default function CategoryManagementPage() {
     }
   }
 
-  async function deleteCategory(category) {
-    if (!confirm(`Hapus kategori ${category.name}?`)) return;
+  function deleteCategory(category) {
+    setPendingDelete(category);
+  }
 
+  async function confirmDeleteCategory() {
+    if (!pendingDelete) return;
     try {
       const response = await fetch("/api/admin/categories", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: category.id }),
+        body: JSON.stringify({ id: pendingDelete.id }),
       });
-
       const data = await response.json();
       setMessage(data.message);
-
       if (response.ok) await loadCategories();
     } catch {
       setMessage("Gagal menghapus kategori.");
+    } finally {
+      setPendingDelete(null);
     }
   }
 
@@ -252,6 +255,19 @@ export default function CategoryManagementPage() {
           )}
         </div>
       </section>
+      {pendingDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4">
+          <div role="dialog" aria-modal="true" aria-labelledby="delete-category-title" className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-rose-50 text-xl font-black text-rose-700">!</span>
+            <h2 id="delete-category-title" className="mt-4 text-lg font-black text-slate-950">Hapus kategori?</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-500">Kategori <b className="text-slate-800">{pendingDelete.name}</b> akan dihapus. Kategori yang masih digunakan course akan ditolak oleh sistem.</p>
+            <div className="mt-6 flex justify-end gap-2">
+              <button type="button" onClick={() => setPendingDelete(null)} className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-600">Batal</button>
+              <button type="button" onClick={confirmDeleteCategory} className="rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-rose-700">Ya, hapus kategori</button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
