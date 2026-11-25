@@ -21,7 +21,7 @@ export default async function ProfilePage() {
       JOIN users u ON u.id=c.teacher_id
       LEFT JOIN contents ct ON ct.course_id=c.id
       LEFT JOIN lesson_progress lp ON lp.content_id=ct.id AND lp.enrollment_id=e.id
-      WHERE e.student_id=$1 GROUP BY c.id,u.username ORDER BY e.enrolled_at DESC`, [user.id]);
+      WHERE e.student_id=$1 GROUP BY c.id,u.username,e.enrolled_at ORDER BY e.enrolled_at DESC`, [user.id]);
     studentCourses = result.rows;
   }
 
