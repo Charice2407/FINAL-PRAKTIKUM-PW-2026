@@ -1,4 +1,3 @@
-
 import { SignJWT, jwtVerify } from "jose";
 
 const secret = new TextEncoder().encode(

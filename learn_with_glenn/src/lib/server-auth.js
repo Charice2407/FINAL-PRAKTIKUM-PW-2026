@@ -1,4 +1,3 @@
-
 import { cookies } from "next/headers";
 import { query } from "@/lib/db";
 import { COOKIE_NAME, verifySessionToken } from "@/lib/token";
